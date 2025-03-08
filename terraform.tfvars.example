@@ -1,2 +1,6 @@
-do_token = "your_digitalocean_api_token_here"
-region   = "nyc3"  # Change to your preferred region
+do_token = "your-digitalocean-api-token"
+region = "sfo2"
+cluster_name = "eigen-k8s"
+kubernetes_version = "1.32.2-do.0"
+node_size = "s-1vcpu-2gb"
+node_count = 1

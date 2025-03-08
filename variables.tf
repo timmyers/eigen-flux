@@ -9,3 +9,27 @@ variable "region" {
   type        = string
   default     = "sfo2"
 }
+
+variable "cluster_name" {
+  description = "The name of the Kubernetes cluster"
+  type        = string
+  default     = "eigen-k8s"
+}
+
+variable "kubernetes_version" {
+  description = "The version of Kubernetes to use"
+  type        = string
+  default     = "1.32.2-do.0"
+}
+
+variable "node_size" {
+  description = "The size of the worker nodes"
+  type        = string
+  default     = "s-1vcpu-2gb"
+}
+
+variable "node_count" {
+  description = "The number of worker nodes in the cluster"
+  type        = number
+  default     = 1
+}
