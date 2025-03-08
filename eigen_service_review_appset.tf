@@ -33,7 +33,12 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
             targetRevision = "HEAD"
             path           = "manifests/eigen-service-review"
             kustomize = {
-              images = ["ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}"]
+              images = [
+                    {
+                        name = "timmyers/eigen-service"
+                        newTag = "review-{{branch}}-{{head_sha}}"
+                    }
+                ]
               patches = [
                 {
                   target = {
