@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_CLOUD_ORGANIZATION: "eigen"
-    #   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
       TF_WORKSPACE: "eigen-flux"
       
     steps:
@@ -45,12 +44,8 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request'
-        run: terraform plan -no-color
-        continue-on-error: true
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
+        run: terraform plan
+        # No need for continue-on-error here as HCP will handle the PR comments
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
