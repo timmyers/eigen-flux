@@ -32,16 +32,19 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
             repoURL        = "https://github.com/timmyers/eigen-flux"
             targetRevision = "HEAD"
             path           = "manifests/eigen-service-review"
-            plugin = {
-              name       = "kustomize"
-              parameters = [
+            kustomize = {
+              images = ["ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}"]
+              patches = [
                 {
-                  name  = "images"
-                  value = "ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}"
-                },
-                {
-                  name  = "host"
-                  value = "{{branch}}.review-eigen.tmye.me"
+                  target = {
+                    kind = "Ingress"
+                    name = "eigen-service-review"
+                  }
+                  patch = <<EOF
+spec:
+  rules:
+  - host: "{{branch}}.review-eigen.tmye.me"
+EOF
                 }
               ]
             }
