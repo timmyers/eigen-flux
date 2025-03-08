@@ -169,20 +169,15 @@ resource "helm_release" "argocd" {
       ingress:
         enabled: true
         ingressClassName: nginx
-        hosts:
-          - argo.eigen.tmye.me
         annotations:
           kubernetes.io/ingress.class: nginx
-          cert-manager.io/cluster-issuer: "letsencrypt-prod"
           nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-          nginx.ingress.kubernetes.io/ssl-passthrough: "false"
           nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
         tls:
           - secretName: argocd-server-tls
             hosts:
               - argo.eigen.tmye.me
-      extraArgs:
-        - --insecure  # Required since we're terminating TLS at the ingress
+      insecure: true
     EOT
   ]
 
