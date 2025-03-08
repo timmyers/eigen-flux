@@ -1,2 +1,4 @@
 [tools]
+doctl = "1.123.0"
+k9s = "0.30.2"
 terraform = "1.11.1"

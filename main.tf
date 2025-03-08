@@ -131,6 +131,30 @@ resource "kubernetes_manifest" "cluster_issuer" {
   depends_on = [helm_release.cert_manager]
 }
 
+# Create Certificate for ArgoCD
+resource "kubernetes_manifest" "argocd_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "argocd-server-cert"
+      namespace = "argocd"
+    }
+    spec = {
+      secretName = "argocd-server-tls"
+      issuerRef = {
+        name  = "letsencrypt-prod"
+        kind  = "ClusterIssuer"
+      }
+      dnsNames = [
+        "argo.eigen.tmye.me"
+      ]
+    }
+  }
+
+  depends_on = [helm_release.cert_manager, kubernetes_manifest.cluster_issuer]
+}
+
 # Install ArgoCD
 resource "helm_release" "argocd" {
   name       = "argocd"
@@ -138,7 +162,7 @@ resource "helm_release" "argocd" {
   chart      = "argo-cd"
   namespace  = "argocd"
   create_namespace = true
-
+  
   values = [
     <<-EOT
     server:
@@ -151,18 +175,18 @@ resource "helm_release" "argocd" {
           kubernetes.io/ingress.class: nginx
           cert-manager.io/cluster-issuer: "letsencrypt-prod"
           nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-          nginx.ingress.kubernetes.io/ssl-passthrough: "false" # Changed from true to false to allow cert-manager to handle SSL
-          nginx.ingress.kubernetes.io/backend-protocol: "HTTP" # Changed from HTTPS to HTTP
+          nginx.ingress.kubernetes.io/ssl-passthrough: "false"
+          nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
         tls:
           - secretName: argocd-server-tls
             hosts:
               - argo.eigen.tmye.me
       extraArgs:
-        - --insecure
+        - --insecure  # Required since we're terminating TLS at the ingress
     EOT
   ]
 
-  depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
+  depends_on = [helm_release.nginx_ingress, helm_release.cert_manager, kubernetes_manifest.argocd_certificate]
 }
 
 # Get load balancer IP for the ingress controller
