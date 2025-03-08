@@ -49,5 +49,5 @@ variable "cloudflare_zone_id" {
 variable "letsencrypt_email" {
   description = "Email address for Let's Encrypt certificate notifications"
   type        = string
-  default     = ""  # You'll want to set this in your terraform.tfvars
+  default     = "timmyers09@gmail.com"  # You'll want to set this in your terraform.tfvars
 }
