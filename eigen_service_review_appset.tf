@@ -37,7 +37,7 @@ spec:
           name: kustomize
           parameters:
             - name: images
-              value: ghcr.io/timmyers/eigen-service:review-{{branch}}
+              value: ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}
       destination:
         server: "https://kubernetes.default.svc"
         namespace: eigen-service-{{branch}}
