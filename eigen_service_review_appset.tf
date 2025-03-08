@@ -42,11 +42,15 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
                     kind = "Ingress"
                     name = "eigen-service-review"
                   }
-                  patch = <<EOF
-spec:
-  rules:
-  - host: "{{branch}}.review-eigen.tmye.me"
-EOF
+                  patch = {
+                    spec = {
+                      rules = [
+                        {
+                          host = "{{branch}}.review-eigen.tmye.me"
+                        }
+                      ]
+                    }
+                  }
                 }
               ]
             }
