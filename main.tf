@@ -170,6 +170,12 @@ resource "helm_release" "argocd" {
     configs:
       params:
         server.insecure: true
+      cm:
+        argocd-cm: |
+          configManagementPlugins: |
+            - name: kustomize
+              generate:
+                command: [ "kustomize", "build", "." ]
     server:
       ingress:
         enabled: true
