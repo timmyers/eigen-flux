@@ -12,6 +12,18 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.23"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.11"
+    }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
   required_version = ">= 1.0.0"
 }
@@ -19,6 +31,27 @@ terraform {
 # Configure the DigitalOcean Provider
 provider "digitalocean" {
   token = var.do_token
+}
+
+# Configure the Kubernetes Provider
+provider "kubernetes" {
+  host                   = digitalocean_kubernetes_cluster.primary.endpoint
+  token                  = digitalocean_kubernetes_cluster.primary.kube_config[0].token
+  cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.primary.kube_config[0].cluster_ca_certificate)
+}
+
+# Configure the Helm Provider
+provider "helm" {
+  kubernetes {
+    host                   = digitalocean_kubernetes_cluster.primary.endpoint
+    token                  = digitalocean_kubernetes_cluster.primary.kube_config[0].token
+    cluster_ca_certificate = base64decode(digitalocean_kubernetes_cluster.primary.kube_config[0].cluster_ca_certificate)
+  }
+}
+
+# Configure the Cloudflare Provider
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
 }
 
 # Create a new Kubernetes cluster
@@ -32,4 +65,70 @@ resource "digitalocean_kubernetes_cluster" "primary" {
     size       = var.node_size
     node_count = var.node_count
   }
+}
+
+# Install nginx-ingress controller
+resource "helm_release" "nginx_ingress" {
+  name       = "nginx-ingress"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  create_namespace = true
+
+  set {
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }
+
+  depends_on = [digitalocean_kubernetes_cluster.primary]
+}
+
+# Install ArgoCD
+resource "helm_release" "argocd" {
+  name       = "argocd"
+  repository = "https://argoproj.github.io/argo-helm"
+  chart      = "argo-cd"
+  namespace  = "argocd"
+  create_namespace = true
+
+  values = [
+    <<-EOT
+    server:
+      ingress:
+        enabled: true
+        ingressClassName: nginx
+        hosts:
+          - argo.eigen.tmye.me
+        annotations:
+          kubernetes.io/ingress.class: nginx
+          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+          nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      extraArgs:
+        - --insecure
+    EOT
+  ]
+
+  depends_on = [helm_release.nginx_ingress]
+}
+
+# Get load balancer IP for the ingress controller
+data "kubernetes_service" "nginx_ingress" {
+  metadata {
+    name      = "nginx-ingress-ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+
+  depends_on = [helm_release.nginx_ingress]
+}
+
+# Create DNS record for ArgoCD
+resource "cloudflare_record" "argocd" {
+  zone_id = var.cloudflare_zone_id
+  name    = "argo.eigen"
+  value   = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
+  type    = "A"
+  ttl     = 3600
+  proxied = false
+
+  depends_on = [data.kubernetes_service.nginx_ingress]
 }

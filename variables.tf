@@ -33,3 +33,15 @@ variable "node_count" {
   type        = number
   default     = 1
 }
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token for DNS management"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for the tmye.me domain"
+  type        = string
+  sensitive   = true
+}
