@@ -1,4 +1,12 @@
 terraform {
+  cloud {
+    organization = "eigen" # Replace with your actual organization name
+
+    workspaces {
+      name = "eigen-flux"
+    }
+  }
+
   required_providers {
     digitalocean = {
       source  = "digitalocean/digitalocean"
