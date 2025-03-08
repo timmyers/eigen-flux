@@ -1,53 +1,104 @@
-// Terraform resource to deploy an ArgoCD ApplicationSet for review apps
-// This ApplicationSet automatically creates an ArgoCD Application for every open pull request
-// in the designated GitHub repository. Each review app deploys the eigen-service using the branch
-// of the PR. For review apps, the destination namespace is set to "eigen-service-{{branch}}" and it is expected
-// that the manifests in the branch override the ingress host to use "{{branch}}.eigen-review.tmye.me".
-
+// Terraform resource to deploy an ArgoCD ApplicationSet for review apps using pure HCL
 resource "kubernetes_manifest" "eigen_service_review_appset" {
-  manifest = yamldecode(<<EOF
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: eigen-service-review-apps
-  namespace: argocd
-spec:
-  generators:
-    - pullRequest:
-        # Generator configuration for GitHub Pull Requests
-        # Ensure you have a Kubernetes secret (e.g. 'github-api') with your GitHub API token
-        # apiTokenRef:
-        #   name: github-api
-        #   key: token
-        owner: timmyers
-        repo: eigen-service
-        # Uncomment below to filter only open PRs if needed
-        filters:
-          - condition: "open"
-  template:
-    metadata:
-      name: eigen-service-{{branch}}
-    spec:
-      project: default
-      source:
-        repoURL: "https://github.com/timmyers/eigen-flux"
-        targetRevision: "HEAD"
-        path: "manifests/eigen-service"
-        plugin:
-          name: kustomize
-          parameters:
-            - name: images
-              value: ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}
-      destination:
-        server: "https://kubernetes.default.svc"
-        namespace: eigen-service-{{branch}}
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
-        syncOptions:
-          - CreateNamespace=true
-EOF
-  )
+  manifest = {
+    apiVersion = "argoproj.io/v1alpha1"
+    kind       = "ApplicationSet"
+    metadata = {
+      name      = "eigen-service-review-apps"
+      namespace = "argocd"
+    }
+    spec = {
+      generators = [
+        {
+          pullRequest = {
+            github = {
+              api   = "https://api.github.com/"
+              owner = "timmyers"
+              repo  = "eigen-service"
+            }
+            filters = [
+              { condition = "open" }
+            ]
+          }
+        }
+      ]
+      template = {
+        metadata = {
+          name = "eigen-service-{{branch}}"
+        }
+        spec = {
+          project = "default"
+          source = {
+            repoURL        = "https://github.com/timmyers/eigen-flux"
+            targetRevision = "HEAD"
+            path           = "manifests/eigen-service"
+            plugin = {
+              name       = "kustomize"
+              parameters = [
+                {
+                  name  = "images"
+                  value = "ghcr.io/timmyers/eigen-service:review-{{branch}}-{{head_sha}}"
+                },
+                {
+                  name  = "host"
+                  value = "{{branch}}.review-eigen.tmye.me"
+                }
+              ]
+            }
+          }
+          destination = {
+            server    = "https://kubernetes.default.svc"
+            namespace = kubernetes_namespace.eigen_service.metadata[0].name
+          }
+          syncPolicy = {
+            automated = {
+              prune    = true
+              selfHeal = true
+            }
+            syncOptions = ["CreateNamespace=true"]
+          }
+        }
+      }
+    }
+  }
   depends_on = [helm_release.argocd]
+}
+
+// Create Certificate for the Service
+resource "kubernetes_manifest" "eigen_service_review_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "eigen-service-cert"
+      namespace = kubernetes_namespace.eigen_service.metadata[0].name
+    }
+    spec = {
+      secretName = "eigen-service-tls"
+      issuerRef = {
+        name  = "letsencrypt-prod"
+        kind  = "ClusterIssuer"
+      }
+      dnsNames = [
+        "*.eigen-review.tmye.me"
+      ]
+    }
+  }
+
+  depends_on = [
+    kubernetes_namespace.eigen_service,
+    kubernetes_manifest.cluster_issuer
+  ]
+}
+
+// Create DNS record for the service
+resource "cloudflare_record" "eigen_service_review" {
+  zone_id = var.cloudflare_zone_id
+  name    = "*.eigen-review.tmye.me"
+  content = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
+  type    = "A"
+  ttl     = 3600
+  proxied = false
+
+  depends_on = [data.kubernetes_service.nginx_ingress]
 }
