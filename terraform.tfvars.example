@@ -6,3 +6,4 @@ node_size = "s-1vcpu-2gb"
 node_count = 1
 cloudflare_api_token = "your-cloudflare-api-token"
 cloudflare_zone_id = "your-cloudflare-zone-id-for-tmye-me"
+letsencrypt_email = "your-email@example.com"

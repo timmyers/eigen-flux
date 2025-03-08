@@ -83,6 +83,54 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [digitalocean_kubernetes_cluster.primary]
 }
 
+# Install cert-manager for SSL certificates
+resource "helm_release" "cert_manager" {
+  name       = "cert-manager"
+  repository = "https://charts.jetstack.io"
+  chart      = "cert-manager"
+  namespace  = "cert-manager"
+  create_namespace = true
+  version    = "v1.13.1"
+
+  set {
+    name  = "installCRDs"
+    value = "true"
+  }
+
+  depends_on = [digitalocean_kubernetes_cluster.primary]
+}
+
+# Create a ClusterIssuer for Let's Encrypt
+resource "kubernetes_manifest" "cluster_issuer" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "ClusterIssuer"
+    metadata = {
+      name = "letsencrypt-prod"
+    }
+    spec = {
+      acme = {
+        server = "https://acme-v02.api.letsencrypt.org/directory"
+        email  = var.letsencrypt_email
+        privateKeySecretRef = {
+          name = "letsencrypt-prod"
+        }
+        solvers = [
+          {
+            http01 = {
+              ingress = {
+                class = "nginx"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+
+  depends_on = [helm_release.cert_manager]
+}
+
 # Install ArgoCD
 resource "helm_release" "argocd" {
   name       = "argocd"
@@ -101,14 +149,20 @@ resource "helm_release" "argocd" {
           - argo.eigen.tmye.me
         annotations:
           kubernetes.io/ingress.class: nginx
+          cert-manager.io/cluster-issuer: "letsencrypt-prod"
           nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-          nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+          nginx.ingress.kubernetes.io/ssl-passthrough: "false" # Changed from true to false to allow cert-manager to handle SSL
+          nginx.ingress.kubernetes.io/backend-protocol: "HTTP" # Changed from HTTPS to HTTP
+        tls:
+          - secretName: argocd-server-tls
+            hosts:
+              - argo.eigen.tmye.me
       extraArgs:
         - --insecure
     EOT
   ]
 
-  depends_on = [helm_release.nginx_ingress]
+  depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
 }
 
 # Get load balancer IP for the ingress controller
@@ -124,8 +178,8 @@ data "kubernetes_service" "nginx_ingress" {
 # Create DNS record for ArgoCD
 resource "cloudflare_record" "argocd" {
   zone_id = var.cloudflare_zone_id
-  name    = "argo.eigen"
-  value   = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
+  name    = "argo.eigen.tmye.me"
+  content = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
   type    = "A"
   ttl     = 3600
   proxied = false
