@@ -1,0 +1,2 @@
+do_token = "your_digitalocean_api_token_here"
+region   = "nyc3"  # Change to your preferred region
