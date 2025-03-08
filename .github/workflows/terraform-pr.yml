@@ -14,8 +14,8 @@ jobs:
     name: 'Terraform PR Preview'
     runs-on: ubuntu-latest
     env:
-      TF_CLOUD_ORGANIZATION: "your-org-name" # Replace with your org name
-      TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+      TF_CLOUD_ORGANIZATION: "eigen"
+    #   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
       TF_WORKSPACE: "eigen-flux"
       
     steps:

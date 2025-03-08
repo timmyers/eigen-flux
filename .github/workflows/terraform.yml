@@ -15,10 +15,9 @@ jobs:
     name: 'Terraform'
     runs-on: ubuntu-latest
     env:
-      TF_CLOUD_ORGANIZATION: "eigen" # Replace with your org name
+      TF_CLOUD_ORGANIZATION: "eigen"
     #   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
       TF_WORKSPACE: "eigen-flux"
-      CONFIG_DIRECTORY: "."
       
     steps:
       - name: Checkout
