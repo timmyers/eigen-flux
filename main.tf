@@ -167,6 +167,9 @@ resource "helm_release" "argocd" {
     <<-EOT
     global:
       domain: argo.eigen.tmye.me
+    configs:
+      params:
+        server.insecure: true
     server:
       ingress:
         enabled: true
@@ -178,7 +181,6 @@ resource "helm_release" "argocd" {
           - secretName: argocd-server-tls
             hosts:
               - argo.eigen.tmye.me
-      insecure: true
     EOT
   ]
 
