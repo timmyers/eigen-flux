@@ -165,15 +165,16 @@ resource "helm_release" "argocd" {
   
   values = [
     <<-EOT
+    global:
+      domain: argo.eigen.tmye.me
     server:
       ingress:
         enabled: true
         ingressClassName: nginx
         annotations:
-          kubernetes.io/ingress.class: nginx
           nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
           nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-        tls:
+        extraTls:
           - secretName: argocd-server-tls
             hosts:
               - argo.eigen.tmye.me
