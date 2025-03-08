@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: eigen-service
-          image: timmyers/eigen-service:latest
+          image: ghcr.io/timmyers/eigen-service:1.0.8
           ports:
             - containerPort: 3000
