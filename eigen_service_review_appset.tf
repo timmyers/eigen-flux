@@ -31,7 +31,7 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
           source = {
             repoURL        = "https://github.com/timmyers/eigen-flux"
             targetRevision = "HEAD"
-            path           = "manifests/eigen-service"
+            path           = "manifests/eigen-service-review"
             plugin = {
               name       = "kustomize"
               parameters = [
@@ -70,11 +70,11 @@ resource "kubernetes_manifest" "eigen_service_review_certificate" {
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
     metadata = {
-      name      = "eigen-service-cert"
+      name      = "eigen-service-review-cert"
       namespace = kubernetes_namespace.eigen_service.metadata[0].name
     }
     spec = {
-      secretName = "eigen-service-tls"
+      secretName = "eigen-service-review-tls"
       issuerRef = {
         name  = "letsencrypt-prod"
         kind  = "ClusterIssuer"

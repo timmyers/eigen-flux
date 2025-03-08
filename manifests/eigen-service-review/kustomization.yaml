@@ -1,0 +1,5 @@
+resources:
+  - ../eigen-service
+
+patchesStrategicMerge:
+  - patch-ingress-tls.yaml
