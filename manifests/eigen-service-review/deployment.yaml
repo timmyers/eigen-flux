@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eigen-service
+  namespace: eigen-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eigen-service
+  template:
+    metadata:
+      labels:
+        app: eigen-service
+    spec:
+      containers:
+        - name: eigen-service
+          image: ghcr.io/timmyers/eigen-service:1.0.8
+          ports:
+            - containerPort: 3000

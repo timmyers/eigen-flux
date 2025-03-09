@@ -40,7 +40,7 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
                     {
                         target = {
                             kind = "Ingress"
-                            name = "eigen-service-review"
+                            name = "eigen-service-ingress-review"
                         }
                         patch = <<EOF
 - op: replace
