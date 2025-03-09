@@ -45,7 +45,7 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
                         patch = <<EOF
 - op: replace
   path: /spec/rules/0/host
-  value: "{{branch}}.review-eigen.tmye.me"
+  value: "{{branch}}.eigen-review.tmye.me"
 - op: replace
   path: /metadata/name
   value: "eigen-service-review-{{branch}}"
