@@ -60,6 +60,12 @@ EOF
 - op: replace
   path: /metadata/name
   value: "eigen-service-review-{{branch}}"
+- op: replace
+  path: /spec/selector/matchLabels/app
+  value: "eigen-service-review-{{branch}}"
+- op: replace
+  path: /spec/template/metadata/labels/app
+  value: "eigen-service-review-{{branch}}"
 EOF
                     },
                     {
@@ -70,6 +76,9 @@ EOF
                         patch = <<EOF
 - op: replace
   path: /metadata/name
+  value: "eigen-service-review-{{branch}}"
+- op: replace
+  path: /spec/selector/app
   value: "eigen-service-review-{{branch}}"
 EOF
                     }
