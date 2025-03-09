@@ -34,7 +34,11 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
             path           = "manifests/eigen-service-review"
             kustomize = {
               images = [
-                "timmyers/eigen-service=timmyers/eigen-service:review-{{branch}}-{{head_sha}}"
+                {
+                  name = "timmyers/eigen-service"
+                  newName = "timmyers/eigen-service"
+                  newTag = "review-{{branch}}-{{head_sha}}"
+                }
               ]
               patches = [
                 {
@@ -43,11 +47,9 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
                     name = "eigen-service-review"
                   }
                   patch = <<EOF
-{
-    "op": "replace",
-    "path": "/spec/rules/0/host",
-    "value": "{{branch}}.review-eigen.tmye.me"
-}
+- op: replace
+  path: /spec/rules/0/host
+  value: "{{branch}}.review-eigen.tmye.me"
 EOF
                 }
               ]
