@@ -40,14 +40,38 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
                     {
                         target = {
                             kind = "Ingress"
-                            name = "eigen-service-ingress-review"
+                            name = "eigen-service-review"
                         }
                         patch = <<EOF
 - op: replace
   path: /spec/rules/0/host
   value: "{{branch}}.review-eigen.tmye.me"
+- op: replace
+  path: /metadata/name
+  value: "eigen-service-review-{{branch}}"
 EOF
-                        #  "{{branch}}.review-eigen.tmye.me"
+                    },
+                    {
+                        target = {
+                            kind = "Deployment"
+                            name = "eigen-service-review"
+                        }
+                        patch = <<EOF
+- op: replace
+  path: /metadata/name
+  value: "eigen-service-review-{{branch}}"
+EOF
+                    },
+                    {
+                        target = {
+                            kind = "Service"
+                            name = "eigen-service-review"
+                        }
+                        patch = <<EOF
+- op: replace
+  path: /metadata/name
+  value: "eigen-service-review-{{branch}}"
+EOF
                     }
                 ]
             }
