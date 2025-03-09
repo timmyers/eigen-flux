@@ -33,24 +33,37 @@ resource "kubernetes_manifest" "eigen_service_review_appset" {
             targetRevision = "HEAD"
             path           = "manifests/eigen-service-review"
             kustomize = {
-              images = [
-                "timmyers/eigen-service=timmyers/eigen-service:review-{{branch}}-{{head_sha}}"
-              ]
-              patches = [
-                {
-                  target = {
-                    kind = "Ingress"
-                    name = "eigen-service-review"
-                  }
-                  path = "/spec/rules/0/host"
-                  patch = "{{branch}}.review-eigen.tmye.me"
-#                   patch = <<EOF
-# - op: replace
-#   path: /spec/rules/0/host
-#   value: "{{branch}}.review-eigen.tmye.me"
-# EOF
-                }
-              ]
+                images = [
+                    "timmyers/eigen-service=timmyers/eigen-service:review-{{branch}}-{{head_sha}}"
+                ]
+                patches = [
+                    {
+                        target = {
+                            kind = "Ingress"
+                            name = "eigen-service-review"
+                        }
+                        patch = <<EOF
+- op: replace
+  path: /spec/rules/0/host
+  value: "{{branch}}.review-eigen.tmye.me"
+EOF
+                    }
+                ]
+#               patches = [
+#                 {
+#                   target = {
+#                     kind = "Ingress"
+#                     name = "eigen-service-review"
+#                   }
+#                   path = "/spec/rules/0/host"
+#                   patch = "{{branch}}.review-eigen.tmye.me"
+# #                   patch = <<EOF
+# # - op: replace
+# #   path: /spec/rules/0/host
+# #   value: "{{branch}}.review-eigen.tmye.me"
+# # EOF
+#                 }
+#               ]
             }
           }
           destination = {
