@@ -11,8 +11,7 @@ metadata:
 spec:
   tls:
     - hosts:
-        - "*.eigen-review.tmye.me"
-      secretName: eigen-service-review-tls
+        - eigen.tmye.me
   rules:
     - host: eigen.tmye.me
       http:

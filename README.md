@@ -1,45 +1,23 @@
 # eigen-flux
 
-This repository contains Terraform configuration for managing a Kubernetes cluster on DigitalOcean, with ArgoCD installed for GitOps deployment management.
+This repository contains Terraform configuration for managing a Kubernetes cluster on DigitalOcean, with ArgoCD installed for GitOps deployment management of the sister repo: [eigen-service](https://github.com/timmyers/eigen-service)
 
-## Features
+## ArgoCD
 
-- DigitalOcean Kubernetes cluster provisioning
-- NGINX Ingress Controller installation
-- ArgoCD deployment with public access
-- Cloudflare DNS integration
+You can find the Argo deployment [here](https://argo.eigen.tmye.me/login?return_url=https%3A%2F%2Fargo.eigen.tmye.me%2Fapplications),
+but it is password protected.
 
-## Prerequisites
-
-- DigitalOcean API token
-- Cloudflare API token with DNS edit permissions
-- Cloudflare Zone ID for the tmye.me domain
-
-## Getting Started
-
-1. Copy `terraform.tfvars.example` to `terraform.tfvars` and fill in your values:
-   ```
-   cp terraform.tfvars.example terraform.tfvars
-   ```
-
-2. Initialize Terraform:
-   ```
-   terraform init
-   ```
-
-3. Apply the configuration:
-   ```
-   terraform apply
-   ```
-
-4. Access ArgoCD at `https://argo.eigen.tmye.me`
-
-## Initial ArgoCD Access
-
-After deployment, you can get the initial admin password using:
-
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+## Eigen Service Dev env:
 ```
+manifests/eigen-service
+eigen_service.tf
+```
+Live at [https://eigen.tmye.me](https://eigen.tmye.me)
 
-Default username is `admin`.
+## Eigen Service PR review env:
+```
+manifests/eigen-service-review
+eigen_service_reciew_apps.tf
+```
+PR: https://github.com/timmyers/eigen-service/pull/2
+Live at [https://feat-super-cool.eigen-review.tmye.me](https://feat-super-cool.eigen-review.tmye.me)
