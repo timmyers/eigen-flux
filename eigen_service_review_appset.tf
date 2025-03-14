@@ -110,31 +110,31 @@ EOF
 }
 
 // Create Certificate for the Service
-# resource "kubernetes_manifest" "eigen_service_review_certificate" {
-#   manifest = {
-#     apiVersion = "cert-manager.io/v1"
-#     kind       = "Certificate"
-#     metadata = {
-#       name      = "eigen-service-review-cert"
-#       namespace = kubernetes_namespace.eigen_service.metadata[0].name
-#     }
-#     spec = {
-#       secretName = "eigen-service-review-tls"
-#       issuerRef = {
-#         name  = "letsencrypt-prod"
-#         kind  = "ClusterIssuer"
-#       }
-#       dnsNames = [
-#         "*.eigen-review.tmye.me"
-#       ]
-#     }
-#   }
+resource "kubernetes_manifest" "eigen_service_review_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "eigen-service-review-cert"
+      namespace = kubernetes_namespace.eigen_service.metadata[0].name
+    }
+    spec = {
+      secretName = "eigen-service-review-tls"
+      issuerRef = {
+        name  = "letsencrypt-prod"
+        kind  = "ClusterIssuer"
+      }
+      dnsNames = [
+        "*.eigen-review.tmye.me"
+      ]
+    }
+  }
 
-#   depends_on = [
-#     kubernetes_namespace.eigen_service,
-#     kubernetes_manifest.cluster_issuer
-#   ]
-# }
+  depends_on = [
+    kubernetes_namespace.eigen_service,
+    kubernetes_manifest.cluster_issuer
+  ]
+}
 
 // Create DNS record for the service
 resource "cloudflare_record" "eigen_service_review" {
