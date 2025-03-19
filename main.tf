@@ -55,17 +55,17 @@ provider "cloudflare" {
 }
 
 # Create a new Kubernetes cluster
-resource "digitalocean_kubernetes_cluster" "primary" {
-  name    = var.cluster_name
-  region  = var.region
-  version = var.kubernetes_version
+# resource "digitalocean_kubernetes_cluster" "primary" {
+#   name    = var.cluster_name
+#   region  = var.region
+#   version = var.kubernetes_version
 
-  node_pool {
-    name       = "${var.cluster_name}-worker-pool"
-    size       = var.node_size
-    node_count = var.node_count
-  }
-}
+#   node_pool {
+#     name       = "${var.cluster_name}-worker-pool"
+#     size       = var.node_size
+#     node_count = var.node_count
+#   }
+# }
 
 # # Install nginx-ingress controller
 # resource "helm_release" "nginx_ingress" {
