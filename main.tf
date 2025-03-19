@@ -67,144 +67,144 @@ resource "digitalocean_kubernetes_cluster" "primary" {
   }
 }
 
-# Install nginx-ingress controller
-resource "helm_release" "nginx_ingress" {
-  name       = "nginx-ingress"
-  repository = "https://kubernetes.github.io/ingress-nginx"
-  chart      = "ingress-nginx"
-  namespace  = "ingress-nginx"
-  create_namespace = true
+# # Install nginx-ingress controller
+# resource "helm_release" "nginx_ingress" {
+#   name       = "nginx-ingress"
+#   repository = "https://kubernetes.github.io/ingress-nginx"
+#   chart      = "ingress-nginx"
+#   namespace  = "ingress-nginx"
+#   create_namespace = true
 
-  set {
-    name  = "controller.publishService.enabled"
-    value = "true"
-  }
+#   set {
+#     name  = "controller.publishService.enabled"
+#     value = "true"
+#   }
 
-  depends_on = [digitalocean_kubernetes_cluster.primary]
-}
+#   depends_on = [digitalocean_kubernetes_cluster.primary]
+# }
 
-# Install cert-manager for SSL certificates
-resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
-  repository = "https://charts.jetstack.io"
-  chart      = "cert-manager"
-  namespace  = "cert-manager"
-  create_namespace = true
-  version    = "v1.13.1"
+# # Install cert-manager for SSL certificates
+# resource "helm_release" "cert_manager" {
+#   name       = "cert-manager"
+#   repository = "https://charts.jetstack.io"
+#   chart      = "cert-manager"
+#   namespace  = "cert-manager"
+#   create_namespace = true
+#   version    = "v1.13.1"
 
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
+#   set {
+#     name  = "installCRDs"
+#     value = "true"
+#   }
 
-  depends_on = [digitalocean_kubernetes_cluster.primary]
-}
+#   depends_on = [digitalocean_kubernetes_cluster.primary]
+# }
 
-# Create a ClusterIssuer for Let's Encrypt
-resource "kubernetes_manifest" "cluster_issuer" {
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name = "letsencrypt-prod"
-    }
-    spec = {
-      acme = {
-        server = "https://acme-v02.api.letsencrypt.org/directory"
-        email  = var.letsencrypt_email
-        privateKeySecretRef = {
-          name = "letsencrypt-prod"
-        }
-        solvers = [
-          {
-            http01 = {
-              ingress = {
-                class = "nginx"
-              }
-            }
-          }
-        ]
-      }
-    }
-  }
+# # Create a ClusterIssuer for Let's Encrypt
+# resource "kubernetes_manifest" "cluster_issuer" {
+#   manifest = {
+#     apiVersion = "cert-manager.io/v1"
+#     kind       = "ClusterIssuer"
+#     metadata = {
+#       name = "letsencrypt-prod"
+#     }
+#     spec = {
+#       acme = {
+#         server = "https://acme-v02.api.letsencrypt.org/directory"
+#         email  = var.letsencrypt_email
+#         privateKeySecretRef = {
+#           name = "letsencrypt-prod"
+#         }
+#         solvers = [
+#           {
+#             http01 = {
+#               ingress = {
+#                 class = "nginx"
+#               }
+#             }
+#           }
+#         ]
+#       }
+#     }
+#   }
 
-  depends_on = [helm_release.cert_manager]
-}
+#   depends_on = [helm_release.cert_manager]
+# }
 
-# Create Certificate for ArgoCD
-resource "kubernetes_manifest" "argocd_certificate" {
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "Certificate"
-    metadata = {
-      name      = "argocd-server-cert"
-      namespace = "argocd"
-    }
-    spec = {
-      secretName = "argocd-server-tls"
-      issuerRef = {
-        name  = "letsencrypt-prod"
-        kind  = "ClusterIssuer"
-      }
-      dnsNames = [
-        "argo.eigen.tmye.me"
-      ]
-    }
-  }
+# # Create Certificate for ArgoCD
+# resource "kubernetes_manifest" "argocd_certificate" {
+#   manifest = {
+#     apiVersion = "cert-manager.io/v1"
+#     kind       = "Certificate"
+#     metadata = {
+#       name      = "argocd-server-cert"
+#       namespace = "argocd"
+#     }
+#     spec = {
+#       secretName = "argocd-server-tls"
+#       issuerRef = {
+#         name  = "letsencrypt-prod"
+#         kind  = "ClusterIssuer"
+#       }
+#       dnsNames = [
+#         "argo.eigen.tmye.me"
+#       ]
+#     }
+#   }
 
-  depends_on = [helm_release.cert_manager, kubernetes_manifest.cluster_issuer]
-}
+#   depends_on = [helm_release.cert_manager, kubernetes_manifest.cluster_issuer]
+# }
 
-# Install ArgoCD
-resource "helm_release" "argocd" {
-  name       = "argocd"
-  repository = "https://argoproj.github.io/argo-helm"
-  chart      = "argo-cd"
-  namespace  = "argocd"
-  create_namespace = true
+# # Install ArgoCD
+# resource "helm_release" "argocd" {
+#   name       = "argocd"
+#   repository = "https://argoproj.github.io/argo-helm"
+#   chart      = "argo-cd"
+#   namespace  = "argocd"
+#   create_namespace = true
   
-  values = [
-    <<-EOT
-    global:
-      domain: argo.eigen.tmye.me
-    configs:
-      params:
-        server.insecure: true
-    server:
-      ingress:
-        enabled: true
-        ingressClassName: nginx
-        annotations:
-          nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-          nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-        extraTls:
-          - secretName: argocd-server-tls
-            hosts:
-              - argo.eigen.tmye.me
-    EOT
-  ]
+#   values = [
+#     <<-EOT
+#     global:
+#       domain: argo.eigen.tmye.me
+#     configs:
+#       params:
+#         server.insecure: true
+#     server:
+#       ingress:
+#         enabled: true
+#         ingressClassName: nginx
+#         annotations:
+#           nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+#           nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+#         extraTls:
+#           - secretName: argocd-server-tls
+#             hosts:
+#               - argo.eigen.tmye.me
+#     EOT
+#   ]
 
-  depends_on = [helm_release.nginx_ingress, helm_release.cert_manager, kubernetes_manifest.argocd_certificate]
-}
+#   depends_on = [helm_release.nginx_ingress, helm_release.cert_manager, kubernetes_manifest.argocd_certificate]
+# }
 
-# Get load balancer IP for the ingress controller
-data "kubernetes_service" "nginx_ingress" {
-  metadata {
-    name      = "nginx-ingress-ingress-nginx-controller"
-    namespace = "ingress-nginx"
-  }
+# # Get load balancer IP for the ingress controller
+# data "kubernetes_service" "nginx_ingress" {
+#   metadata {
+#     name      = "nginx-ingress-ingress-nginx-controller"
+#     namespace = "ingress-nginx"
+#   }
 
-  depends_on = [helm_release.nginx_ingress]
-}
+#   depends_on = [helm_release.nginx_ingress]
+# }
 
-# Create DNS record for ArgoCD
-resource "cloudflare_record" "argocd" {
-  zone_id = var.cloudflare_zone_id
-  name    = "argo.eigen.tmye.me"
-  content = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
-  type    = "A"
-  ttl     = 3600
-  proxied = false
+# # Create DNS record for ArgoCD
+# resource "cloudflare_record" "argocd" {
+#   zone_id = var.cloudflare_zone_id
+#   name    = "argo.eigen.tmye.me"
+#   content = data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].ip
+#   type    = "A"
+#   ttl     = 3600
+#   proxied = false
 
-  depends_on = [data.kubernetes_service.nginx_ingress]
-}
+#   depends_on = [data.kubernetes_service.nginx_ingress]
+# }
